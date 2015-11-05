@@ -1,5 +1,6 @@
 class Program {
 int i;
+int j;
 static int proc(int a, int b) {
 int x;
 
