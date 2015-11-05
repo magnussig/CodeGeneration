@@ -327,6 +327,7 @@ public class Parser {
         else if (lookaheadIs(TokenCode.IF)) {
             trace("if");
             match(TokenCode.IF);
+            newLabel();
             match(TokenCode.LPAREN);
             expression();
             match(TokenCode.RPAREN);
@@ -336,6 +337,7 @@ public class Parser {
         else if (lookaheadIs(TokenCode.FOR)) {
             trace("for");
             match(TokenCode.FOR);
+            newLabel();
             match(TokenCode.LPAREN);
             variableLoc();
             match(TokenCode.ASSIGNOP);
@@ -398,6 +400,7 @@ public class Parser {
         m_errorHandler.startNonT(NonT.OPTIONAL_ELSE);
         if (lookaheadIs(TokenCode.ELSE)) {
             match(TokenCode.ELSE);
+            newLabel();
             statementBlock();
         }
         m_errorHandler.stopNonT();
@@ -451,6 +454,7 @@ public class Parser {
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION2);
         if (lookaheadIs(TokenCode.ADDOP)) {
             match(TokenCode.ADDOP);
+
             term();
             // Was missing!
             simpleExpression2();
@@ -502,8 +506,9 @@ public class Parser {
         m_errorHandler.startNonT(NonT.FACTOR);
         if (lookaheadIs(TokenCode.IDENTIFIER))
             idStartingFactor();
-        else if (lookaheadIs(TokenCode.NUMBER))
+        else if (lookaheadIs(TokenCode.NUMBER)) {
             match(TokenCode.NUMBER);
+        }
         else if (lookaheadIs(TokenCode.LPAREN)) {
             match(TokenCode.LPAREN);
             expression();

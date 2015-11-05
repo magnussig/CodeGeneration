@@ -19,18 +19,9 @@ public class CodeGenerator {
 
     protected static void print(){
         for(Quadruple q:QuadrupleList.QList){
-           if(q.Op == TacCode.LABEL ) {
-               if(q.Result.getLexeme() != null){
-                   System.out.print(q.Result.getLexeme());
-               }
-               else{
 
-                   System.out.print("lol");
-               }
-           }
-           else {
                System.out.println(" \t \t " +  q.Op + " \t \t " + q.Param1 + " \t \t " + q.Param2 + " \t \t " + q.Result.getLexeme());
-           }
+
         }
 
         System.out.println("NEXT");
