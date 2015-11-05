@@ -17,6 +17,8 @@ public class Parser {
     public Parser(Lexer lexer, String sourceFile) {
         m_errorHandler = new ErrorHandler(lexer, sourceFile);
         m_lexer = lexer;
+        SymbolTable.insert("0");
+        SymbolTable.insert("1");
         readNextToken();
     }
 

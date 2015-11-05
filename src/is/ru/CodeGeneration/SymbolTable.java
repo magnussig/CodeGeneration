@@ -3,6 +3,7 @@ package is.ru.CodeGeneration;
 import java.util.*;
 
 public class SymbolTable {
+
     private static Hashtable<String, SymbolTableEntry> s_lookupList = new Hashtable<String, SymbolTableEntry>();
     private static ArrayList<SymbolTableEntry> s_seqList = new ArrayList<SymbolTableEntry>();
 
