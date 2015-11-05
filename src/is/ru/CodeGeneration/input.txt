@@ -1,0 +1,18 @@
+class Program {
+
+  static void main() {
+    int i;
+    int j;
+
+    i = 1;
+    j = -1;
+
+    if (i > 0) {
+      i = (1 - j*3);
+    }
+    else {
+      i++;
+    }
+  	writeln(i);
+  }
+}

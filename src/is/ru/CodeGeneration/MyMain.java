@@ -1,13 +1,17 @@
 package is.ru.CodeGeneration;
 
 import java.io.*;
+import java.net.URL;
 
 public class MyMain {
     public static final boolean TRACE = false;
 
     public static void main(String [] args) throws IOException {
-        Lexer lexer = new Lexer(new FileReader(args[0]));
-        Parser parser = new Parser(lexer, args[0]);
+        URL url = MyMain.class.getResource("input.txt");
+        FileReader fReader = new FileReader(new File(url.getFile()));
+        Lexer lexer = new Lexer(fReader);
+        String sourceFile = "C:\\Users\\HuldarBjarmi\\Documents\\GitHub\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
+        Parser parser = new Parser(lexer, sourceFile);
         parser.program();
 
     }
