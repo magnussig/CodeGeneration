@@ -6,10 +6,10 @@ import is.ru.CodeGeneration.Enums.TacCode;
  */
 public class Quadruple {
 
-    public static TacCode Op;
-    public static SymbolTableEntry Param1;
-    public static SymbolTableEntry Param2;
-    public static SymbolTableEntry Result;
+    public  TacCode Op;
+    public  SymbolTableEntry Param1;
+    public  SymbolTableEntry Param2;
+    public  SymbolTableEntry Result;
 
     public Quadruple(TacCode Op, SymbolTableEntry Param1, SymbolTableEntry Param2, SymbolTableEntry Result) {
         this.Op = Op;
@@ -18,35 +18,35 @@ public class Quadruple {
         this.Result = Result;
     }
 
-    public static TacCode getOp() {
+    public TacCode getOp() {
         return Op;
     }
 
-    public static void setOp(TacCode op) {
+    public void setOp(TacCode op) {
         Op = op;
     }
 
-    public static SymbolTableEntry getParam1() {
+    public SymbolTableEntry getParam1() {
         return Param1;
     }
 
-    public static void setParam1(SymbolTableEntry param1) {
+    public void setParam1(SymbolTableEntry param1) {
         Param1 = param1;
     }
 
-    public static SymbolTableEntry getParam2() {
+    public SymbolTableEntry getParam2() {
         return Param2;
     }
 
-    public static void setParam2(SymbolTableEntry param2) {
+    public void setParam2(SymbolTableEntry param2) {
         Param2 = param2;
     }
 
-    public static SymbolTableEntry getResult() {
+    public SymbolTableEntry getResult() {
         return Result;
     }
 
-    public static void setResult(SymbolTableEntry result) {
+    public void setResult(SymbolTableEntry result) {
         Result = result;
     }
 

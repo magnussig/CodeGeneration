@@ -1,5 +1,6 @@
 package is.ru.CodeGeneration;
 
+import com.sun.org.apache.bcel.internal.classfile.Code;
 import is.ru.CodeGeneration.Enums.TacCode;
 import is.ru.CodeGeneration.Enums.TokenCode;
 import is.ru.CodeGeneration.Enums.NonT;
@@ -12,6 +13,7 @@ public class Parser {
     private Lexer m_lexer;
     private Token m_current;
     private Token m_prev;
+    private CodeGenerator m_genCode;
     private int tempCounter;
     private int labelCounter;
 
@@ -22,7 +24,7 @@ public class Parser {
         m_lexer = lexer;
         SymbolTable.insert("0");
         SymbolTable.insert("1");
-        CodeGenerator genCode = new CodeGenerator();
+        m_genCode = new CodeGenerator();
         tempCounter = 0;
         readNextToken();
     }
@@ -123,6 +125,7 @@ public class Parser {
         }
         else {
             trace("  Matched " + tokenCode);
+
             readNextToken();
         }
     }
@@ -193,6 +196,7 @@ public class Parser {
     protected void variable() {
         m_errorHandler.startNonT(NonT.VARIABLE);
         match(TokenCode.IDENTIFIER);
+        m_genCode.generate(TacCode.VAR, null, null, m_prev.getSymTabEntry());
         if (lookaheadIs(TokenCode.LBRACKET)) {
             match(TokenCode.LBRACKET);
             match(TokenCode.NUMBER);
@@ -222,6 +226,7 @@ public class Parser {
         match(TokenCode.STATIC);
         methodReturnType();
         match(TokenCode.IDENTIFIER);
+        m_genCode.generate(TacCode.LABEL, null, null, m_prev.getSymTabEntry());
         match(TokenCode.LPAREN);
         parameters();
         match(TokenCode.RPAREN);

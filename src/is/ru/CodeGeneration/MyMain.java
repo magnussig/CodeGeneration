@@ -1,7 +1,9 @@
 package is.ru.CodeGeneration;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.URL;
+import java.util.Arrays;
 
 public class MyMain {
     public static final boolean TRACE = false;
@@ -13,5 +15,6 @@ public class MyMain {
         String sourceFile = "C:\\Users\\HuldarBjarmi\\Documents\\GitHub\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
         Parser parser = new Parser(lexer, sourceFile);
         parser.program();
+
     }
 }
