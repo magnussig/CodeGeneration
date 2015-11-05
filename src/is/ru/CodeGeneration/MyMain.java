@@ -13,6 +13,5 @@ public class MyMain {
         String sourceFile = "C:\\Users\\HuldarBjarmi\\Documents\\GitHub\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
         Parser parser = new Parser(lexer, sourceFile);
         parser.program();
-
     }
 }
