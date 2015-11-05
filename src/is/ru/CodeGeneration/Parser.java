@@ -1,5 +1,6 @@
 package is.ru.CodeGeneration;
 
+import is.ru.CodeGeneration.Enums.TacCode;
 import is.ru.CodeGeneration.Enums.TokenCode;
 import is.ru.CodeGeneration.Enums.NonT;
 import is.ru.CodeGeneration.Enums.OpType;
@@ -11,6 +12,8 @@ public class Parser {
     private Lexer m_lexer;
     private Token m_current;
     private Token m_prev;
+    private int tempCounter;
+    private int labelCounter;
 
     private ErrorHandler m_errorHandler;
 
@@ -19,9 +22,26 @@ public class Parser {
         m_lexer = lexer;
         SymbolTable.insert("0");
         SymbolTable.insert("1");
+        CodeGenerator genCode = new CodeGenerator();
+        tempCounter = 0;
         readNextToken();
     }
 
+    protected SymbolTableEntry newTemp() {
+        tempCounter++;
+        String temp = "t" + tempCounter;
+        SymbolTableEntry tempEntry = SymbolTable.insert(temp);
+        CodeGenerator.generate(TacCode.VAR, null, null, tempEntry);
+        return tempEntry;
+    }
+
+    protected SymbolTableEntry newLabel() {
+        labelCounter++;
+        String tmp = "lab" + labelCounter;
+        SymbolTableEntry label = SymbolTable.insert(tmp);
+        CodeGenerator.generate(TacCode.LABEL, null, null, label);
+        return label;
+    }
     /*
       Reads the next token.
       If the compiler is in error recovery we do not actually read a new token, we just pretend we do. We will get match failures which the ErrorHandler will supress. When we leave the procedure with the offending non-terminal, the ErrorHandler will go out of recovery mode and start reading tokens again.
