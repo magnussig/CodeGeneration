@@ -206,6 +206,9 @@ public class Parser {
     }
 
     protected void methodDeclarations() {
+        String gotoMain1 = "main";
+        SymbolTableEntry gotoMain = SymbolTable.insert(gotoMain1);
+        m_genCode.generate(TacCode.GOTO, null, null, gotoMain);
         m_errorHandler.startNonT(NonT.METHOD_DECLARATIONS);
         methodDeclaration();
         moreMethodDeclarations();
@@ -285,6 +288,7 @@ public class Parser {
     protected void idStartingStatement() {
         m_errorHandler.startNonT(NonT.ID_STARTING_STATEMENT);
         match(TokenCode.IDENTIFIER);
+
         restOfIdStartingStatement();
         match(TokenCode.SEMICOLON);
         m_errorHandler.stopNonT();
@@ -299,9 +303,15 @@ public class Parser {
         }
         else if (lookaheadIs(TokenCode.INCDECOP)) {
             match(TokenCode.INCDECOP);
+           // SymbolTableEntry temp1 = newTemp();
+           // SymbolTableEntry temp2 = newTemp();
+           // m_genCode.generate(TacCode.ASSIGN,temp2,null,);
+           // m_genCode.generate(TacCode.ADD, m_prev.getSymTabEntry(), temp2, temp1);
         }
         else if (lookaheadIs(TokenCode.ASSIGNOP)) {
             match(TokenCode.ASSIGNOP);
+           // SymbolTableEntry tx = newTemp();
+           // m_genCode.generate(TacCode.VAR,tx,null,m_prev.getSymTabEntry());
             expression();
         }
         else if (lookaheadIs(TokenCode.LBRACKET)) {
@@ -490,8 +500,10 @@ public class Parser {
     protected void restOfIdStartingFactor() {
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_FACTOR);
         if (lookaheadIs(TokenCode.LPAREN)) {
+
             match(TokenCode.LPAREN);
             expressionList();
+
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.LBRACKET)) {
