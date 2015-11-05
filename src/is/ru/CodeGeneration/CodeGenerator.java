@@ -2,6 +2,8 @@ package is.ru.CodeGeneration;
 
 import is.ru.CodeGeneration.Enums.TacCode;
 
+import java.util.ArrayList;
+
 /**
  * Created by maggi on 5.11.2015.
  * This class should be the actual code generator, containing methods that will be called by the parser to actually
@@ -27,4 +29,13 @@ public class CodeGenerator {
         System.out.println("NEXT");
     }
 
+    /**
+     *
+     * @param paramList
+     */
+    protected static void addFormalParameters(ArrayList<SymbolTableEntry> paramList) {
+        for (SymbolTableEntry temp : paramList) {
+            generate(TacCode.FPARAM,null,null,temp);
+        }
+    }
 }

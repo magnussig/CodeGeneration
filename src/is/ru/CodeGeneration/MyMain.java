@@ -12,7 +12,7 @@ public class MyMain {
         URL url = MyMain.class.getResource("input.txt");
         FileReader fReader = new FileReader(new File(url.getFile()));
         Lexer lexer = new Lexer(fReader);
-        String sourceFile = "C:\\Users\\HuldarBjarmi\\Documents\\GitHub\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
+        String sourceFile = "C:\\Code\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
         Parser parser = new Parser(lexer, sourceFile);
         parser.program();
 

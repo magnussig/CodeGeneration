@@ -7,6 +7,7 @@ import is.ru.CodeGeneration.Enums.NonT;
 import is.ru.CodeGeneration.Enums.OpType;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Parser {
 
@@ -14,6 +15,7 @@ public class Parser {
     private Token m_current;
     private Token m_prev;
     private CodeGenerator m_genCode;
+    private ArrayList<SymbolTableEntry> m_parameterList;
     private int tempCounter;
     private int labelCounter;
 
@@ -228,7 +230,10 @@ public class Parser {
         match(TokenCode.IDENTIFIER);
         m_genCode.generate(TacCode.LABEL, null, null, m_prev.getSymTabEntry());
         match(TokenCode.LPAREN);
+        //create list
+        m_parameterList = new ArrayList<SymbolTableEntry>();
         parameters();
+        m_genCode.addFormalParameters(m_parameterList);
         match(TokenCode.RPAREN);
         match(TokenCode.LBRACE);
         variableDeclarations();
@@ -258,6 +263,7 @@ public class Parser {
         m_errorHandler.startNonT(NonT.PARAMETER_LIST);
         type();
         match(TokenCode.IDENTIFIER);
+        m_parameterList.add(m_prev.getSymTabEntry());
         parameterList2();
         m_errorHandler.stopNonT();
     }
@@ -268,6 +274,7 @@ public class Parser {
             match(TokenCode.COMMA);
             type();
             match(TokenCode.IDENTIFIER);
+            m_parameterList.add(m_prev.getSymTabEntry());
             parameterList2();
         }
         m_errorHandler.stopNonT();
@@ -524,6 +531,7 @@ public class Parser {
     }
 
     protected void variableLoc() {
+        SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.VARIABLE_LOC);
         match(TokenCode.IDENTIFIER);
         variableLocRest();
