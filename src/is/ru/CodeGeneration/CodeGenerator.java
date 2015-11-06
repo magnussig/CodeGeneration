@@ -24,6 +24,7 @@ public class CodeGenerator {
 
             String p1;
             String p2;
+            String result;
 
             if (q.Param1 == null)
             {
@@ -43,7 +44,15 @@ public class CodeGenerator {
                 p2 = q.Param2.getLexeme();
             }
 
-            System.out.println(" \t \t " +  q.Op + " \t \t " + p1 + " \t \t " + p2 + " \t \t " + q.Result.getLexeme());
+            if (q.Result == null)
+            {
+                result = "null";
+            }
+            else
+            {
+                result = q.Result.getLexeme();
+            }
+            System.out.println(" \t \t " +  q.Op + " \t \t " + p1 + " \t \t " + p2 + " \t \t " + result);
         }
 
         System.out.println("NEXT");

@@ -6,6 +6,7 @@ import is.ru.CodeGeneration.Enums.TokenCode;
 import is.ru.CodeGeneration.Enums.NonT;
 import is.ru.CodeGeneration.Enums.OpType;
 import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
+import sun.jvm.hotspot.debugger.cdbg.Sym;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -243,6 +244,7 @@ public class Parser {
         variableDeclarations();
         statementList();
         match(TokenCode.RBRACE);
+        m_genCode.generate(TacCode.RETURN, null, null, null);
         m_errorHandler.stopNonT();
     }
 
@@ -304,23 +306,37 @@ public class Parser {
 
     protected void restOfIdStartingStatement() {
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_STATEMENT);
+        // maybe need to add stuff
         if (lookaheadIs(TokenCode.LPAREN)) {
             match(TokenCode.LPAREN);
             expressionList();
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.INCDECOP)) {
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
             match(TokenCode.INCDECOP);
-           // SymbolTableEntry temp1 = newTemp();
-           // SymbolTableEntry temp2 = newTemp();
-           // m_genCode.generate(TacCode.ASSIGN,temp2,null,);
-           // m_genCode.generate(TacCode.ADD, m_prev.getSymTabEntry(), temp2, temp1);
+
+            SymbolTableEntry temp1 = newTemp();
+
+            TacCode tc;
+            OpType prevOp = m_prev.getOpType();
+            if (prevOp == OpType.INC)
+            {
+                tc = TacCode.ADD;
+            }
+            else // if (prevOp == OpType.DEC)
+            {
+                tc = TacCode.SUB;
+            }
+            m_genCode.generate(tc, SymbolTable.lookup("1"), null, temp1);
+            m_genCode.generate(TacCode.ASSIGN, temp1, null, prev);
         }
         else if (lookaheadIs(TokenCode.ASSIGNOP)) {
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
             match(TokenCode.ASSIGNOP);
-           // SymbolTableEntry tx = newTemp();
-           // m_genCode.generate(TacCode.VAR,tx,null,m_prev.getSymTabEntry());
-            expression();
+
+            SymbolTableEntry ste = expression();
+            m_genCode.generate(TacCode.ASSIGN, ste, null, prev);
         }
         else if (lookaheadIs(TokenCode.LBRACKET)) {
             match(TokenCode.LBRACKET);
@@ -448,6 +464,10 @@ public class Parser {
         m_errorHandler.startNonT(NonT.EXPRESSION);
         SymbolTableEntry simpleExpression_ste = simpleExpression();
         ret = expression2();
+        if (ret == null)
+        {
+            ret = simpleExpression_ste;
+        }
         m_errorHandler.stopNonT();
         return ret;
     }
@@ -458,7 +478,6 @@ public class Parser {
         /* create 1 tmp og 2 labels and then check which relop it is*/
         if (lookaheadIs(TokenCode.RELOP)) {
             SymbolTableEntry t1 = newTemp();
-            m_genCode.generate(TacCode.VAR, null, null, t1);
             SymbolTableEntry l1 = newLabel();
             SymbolTableEntry l2 = newLabel();
             TacCode tc;
@@ -502,22 +521,29 @@ public class Parser {
 //check sign, let simpleExpression receive symboltableentry as a parameter
     protected SymbolTableEntry simpleExpression() {
         SymbolTableEntry ret = null;
+        SymbolTableEntry termSTE = null;
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION);
         if (lookaheadIn(NonT.firstOf(NonT.SIGN))) {
             sign();
-            if(m_prev.getOpType() == OpType.MINUS)
+            OpType prev = m_prev.getOpType();
+            termSTE = term();
+
+            if(prev == OpType.MINUS)
             {
-                SymbolTableEntry termSTE = term();
                 SymbolTableEntry t = newTemp();
                 m_genCode.generate(TacCode.UMINUS, termSTE, null, t);
             }
         }
         else
         {
-            SymbolTableEntry termSTE = term();
+             termSTE = term();
         }
 
         ret = simpleExpression2();
+        if (ret == null)
+        {
+            ret = termSTE;
+        }
         m_errorHandler.stopNonT();
         return ret;
     }
@@ -528,8 +554,9 @@ public class Parser {
         if (lookaheadIs(TokenCode.ADDOP)) {
 
             SymbolTableEntry t = newTemp();
-            m_genCode.generate(TacCode.VAR, null, null, t);
 
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
+            match(TokenCode.ADDOP);
             TacCode tc;
             if(m_prev.getOpType() == OpType.MINUS) {
                 tc = TacCode.SUB;
@@ -541,13 +568,15 @@ public class Parser {
                 tc = TacCode.OR;
             }
 
-            SymbolTableEntry prev = m_prev.getSymTabEntry();
-            match(TokenCode.ADDOP);
             SymbolTableEntry termSTE2 = term();
 
             m_genCode.generate(tc, prev, termSTE2, t);
 
             ret = simpleExpression2();
+            if (ret == null)
+            {
+                ret = t;
+            }
         }
         m_errorHandler.stopNonT();
         return ret;
@@ -558,6 +587,10 @@ public class Parser {
         m_errorHandler.startNonT(NonT.TERM);
         SymbolTableEntry ste = factor();
         ret = term2();
+        if (ret == null)
+        {
+            ret = ste;
+        }
         m_errorHandler.stopNonT();
         return ret;
     }
@@ -568,7 +601,6 @@ public class Parser {
         if (lookaheadIs(TokenCode.MULOP)) {
 
             SymbolTableEntry t1 = newTemp();
-            m_genCode.generate(TacCode.VAR, null, null, t1);
 
             TacCode tc;
             OpType oc = lookahead().getOpType();
@@ -596,6 +628,10 @@ public class Parser {
             m_genCode.generate(tc, prevSTE, ste, t1);
             // Was missing!
             ret = term2();
+            if (ret == null)
+            {
+                ret = t1;
+            }
         }
         m_errorHandler.stopNonT();
         return ret;
@@ -635,6 +671,7 @@ public class Parser {
         if (lookaheadIs(TokenCode.IDENTIFIER))
             ret = idStartingFactor();
         else if (lookaheadIs(TokenCode.NUMBER)) {
+            ret = m_current.getSymTabEntry();
             match(TokenCode.NUMBER);
         }
         else if (lookaheadIs(TokenCode.LPAREN)) {

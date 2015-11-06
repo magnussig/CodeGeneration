@@ -9,7 +9,7 @@ public class MyMain {
     public static final boolean TRACE = false;
 
     public static void main(String [] args) throws IOException {
-        URL url = MyMain.class.getResource("basic.txt");
+        URL url = MyMain.class.getResource("input.txt");
         FileReader fReader = new FileReader(new File(url.getFile()));
         Lexer lexer = new Lexer(fReader);
         String sourceFile = "C:\\Code\\CodeGeneration\\src\\is\\ru\\CodeGeneration\\input.txt";
