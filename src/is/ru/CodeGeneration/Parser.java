@@ -442,15 +442,18 @@ public class Parser {
         m_errorHandler.stopNonT();
     }
 
-    protected void expression() {
+    protected SymbolTableEntry expression() {
+        SymbolTableEntry simpleExpression_ste = null;
         m_errorHandler.startNonT(NonT.EXPRESSION);
-        simpleExpression();
-        expression2();
+        simpleExpression_ste = simpleExpression();
+        expression2(simpleExpression_ste);
         m_errorHandler.stopNonT();
+        return t;
     }
 
-    protected void expression2() {
+    protected SymbolTableEntry expression2(SymbolTableEntry simpleExpression_ste) {
         m_errorHandler.startNonT(NonT.EXPRESSION2);
+        /* check value of simpleExpression_ste, could be '+', '-' or '!'( */
         if (lookaheadIs(TokenCode.RELOP)) {
             match(TokenCode.RELOP);
             simpleExpression();
@@ -497,49 +500,55 @@ public class Parser {
         m_errorHandler.stopNonT();
     }
 
-    protected void idStartingFactor() {
+    protected SymbolTableEntry idStartingFactor() {
+        SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.ID_STARTING_FACTOR);
         match(TokenCode.IDENTIFIER);
-        restOfIdStartingFactor();
+        t = restOfIdStartingFactor();
         m_errorHandler.stopNonT();
+        return t;
     }
 
-    protected void restOfIdStartingFactor() {
+    protected SymbolTableEntry restOfIdStartingFactor() {
+        SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_FACTOR);
         if (lookaheadIs(TokenCode.LPAREN)) {
 
             match(TokenCode.LPAREN);
-            expressionList();
+            t = expressionList();
 
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.LBRACKET)) {
             match(TokenCode.LBRACKET);
-            expression();
+            t = expression();
             match(TokenCode.RBRACKET);
         }
         m_errorHandler.stopNonT();
+        return t;
     }
 
-    protected void factor() {
+    protected SymbolTableEntry factor() {
+        SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.FACTOR);
         if (lookaheadIs(TokenCode.IDENTIFIER))
-            idStartingFactor();
+            t = idStartingFactor();
         else if (lookaheadIs(TokenCode.NUMBER)) {
             match(TokenCode.NUMBER);
         }
         else if (lookaheadIs(TokenCode.LPAREN)) {
             match(TokenCode.LPAREN);
-            expression();
+            t = expression();
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.NOT)) {
             match(TokenCode.NOT);
-            factor();
+            t = factor();
         }
         else // TODO: Add error context, i.e. factor
             noMatch();
         m_errorHandler.stopNonT();
+        return t;
     }
 
     protected void variableLoc() {
