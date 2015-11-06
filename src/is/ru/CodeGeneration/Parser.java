@@ -242,7 +242,7 @@ public class Parser {
         //create list
         m_parameterList = new ArrayList<SymbolTableEntry>();
         parameters();
-        m_genCode.addFormalParameters(m_parameterList);
+        m_genCode.addFormalParameters(TacCode.FPARAM, m_parameterList);
         match(TokenCode.RPAREN);
         match(TokenCode.LBRACE);
         variableDeclarations();
@@ -322,8 +322,14 @@ public class Parser {
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_STATEMENT);
         // maybe need to add stuff
         if (lookaheadIs(TokenCode.LPAREN)) {
+
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
             match(TokenCode.LPAREN);
+            m_parameterList = new ArrayList<SymbolTableEntry>();
             expressionList();
+            m_genCode.addFormalParameters(TacCode.APARAM, m_parameterList);
+            m_genCode.generate(TacCode.CALL, prev, null, null);
+
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.INCDECOP)) {
@@ -459,7 +465,8 @@ public class Parser {
     protected void expressionList() {
         m_errorHandler.startNonT(NonT.EXPRESSION_LIST);
         if (lookaheadIsFirstOfExpression()) {
-            expression();
+            SymbolTableEntry ste = expression();
+            m_parameterList.add(ste);
             moreExpressions();
         }
         m_errorHandler.stopNonT();
@@ -469,7 +476,8 @@ public class Parser {
         m_errorHandler.startNonT(NonT.MORE_EXPRESSIONS);
         if (lookaheadIs(TokenCode.COMMA) && !m_errorHandler.inRecovery()) {
             match(TokenCode.COMMA);
-            expression();
+            SymbolTableEntry ste = expression();
+            m_parameterList.add(ste);
             moreExpressions();
         }
         m_errorHandler.stopNonT();
@@ -569,7 +577,6 @@ public class Parser {
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION2);
         if (lookaheadIs(TokenCode.ADDOP)) {
 
-            SymbolTableEntry t = newTemp();
 
             SymbolTableEntry prev = m_prev.getSymTabEntry();
             match(TokenCode.ADDOP);
@@ -585,6 +592,7 @@ public class Parser {
             }
 
             SymbolTableEntry termSTE2 = term();
+            SymbolTableEntry t = newTemp();
 
             m_genCode.generate(tc, prev, termSTE2, t);
 
@@ -671,9 +679,12 @@ public class Parser {
         SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_FACTOR);
         if (lookaheadIs(TokenCode.LPAREN)) {
-
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
             match(TokenCode.LPAREN);
+            m_parameterList = new ArrayList<SymbolTableEntry>();
             expressionList();
+            m_genCode.addFormalParameters(TacCode.APARAM, m_parameterList);
+            m_genCode.generate(TacCode.CALL, prev, null, null);
 
             match(TokenCode.RPAREN);
         }

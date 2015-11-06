@@ -2,6 +2,9 @@ package is.ru.CodeGeneration;
 
 import is.ru.CodeGeneration.Enums.TacCode;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 
 /**
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 public class CodeGenerator {
 
     public CodeGenerator() {
+
     }
 
     protected static void generate(TacCode op, SymbolTableEntry param1, SymbolTableEntry param2, SymbolTableEntry result){
@@ -20,51 +24,69 @@ public class CodeGenerator {
     }
 
     protected static void print(){
-        for(Quadruple q:QuadrupleList.QList){
+        boolean isLabel = false;
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("tacCode.tac", "UTF-8");
+        }catch(Exception e){
+            System.exit(1);
+        }
+        for(Quadruple q:QuadrupleList.QList) {
 
             String p1;
             String p2;
             String result;
+            String label;
 
-            if (q.Param1 == null)
-            {
-                p1 = "null";
+
+
+            if (q.Op == TacCode.LABEL) {
+                label = q.Result.getLexeme() + ":";
+                writer.printf("%10s", label);
+                isLabel = true;
+                continue;
             }
-            else
-            {
+            else if(isLabel==false){
+                writer.printf("%10s","");
+            }
+            isLabel = false;
+
+
+            if (q.Param1 == null) {
+                p1 = "";
+            } else {
                 p1 = q.Param1.getLexeme();
+
             }
 
-            if (q.Param2 == null)
-            {
-                p2 = "null";
-            }
-            else
-            {
+            if (q.Param2 == null) {
+                p2 ="";
+            } else {
                 p2 = q.Param2.getLexeme();
+
             }
 
-            if (q.Result == null)
-            {
-                result = "null";
-            }
-            else
-            {
+            if (q.Result == null) {
+
+                result ="";
+            } else {
                 result = q.Result.getLexeme();
-            }
-            System.out.println(" \t \t " +  q.Op + " \t \t " + p1 + " \t \t " + p2 + " \t \t " + result);
-        }
 
-        System.out.println("NEXT");
+            }
+            writer.printf("%10s%10s%10s %10s\n",q.Op, p1,p2,result);
+
+        }
+        writer.close();
+
     }
 
     /**
      *
      * @param paramList
      */
-    protected static void addFormalParameters(ArrayList<SymbolTableEntry> paramList) {
+    protected static void addFormalParameters(TacCode param, ArrayList<SymbolTableEntry> paramList) {
         for (SymbolTableEntry temp : paramList) {
-            generate(TacCode.FPARAM,null,null,temp);
+            generate(param,null,null,temp);
         }
     }
 }
