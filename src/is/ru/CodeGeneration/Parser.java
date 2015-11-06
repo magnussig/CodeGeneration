@@ -21,6 +21,8 @@ public class Parser {
     private int tempCounter;
     private int labelCounter;
 
+    private SymbolTableEntry funcReturnParam;
+
     private ErrorHandler m_errorHandler;
 
     public Parser(Lexer lexer, String sourceFile) {
@@ -30,6 +32,7 @@ public class Parser {
         SymbolTable.insert("1");
         m_genCode = new CodeGenerator();
         tempCounter = 0;
+        funcReturnParam = null;
         readNextToken();
     }
 
@@ -231,7 +234,8 @@ public class Parser {
     protected void methodDeclaration() {
         m_errorHandler.startNonT(NonT.METHOD_DECLARATION);
         match(TokenCode.STATIC);
-        methodReturnType();
+        boolean isVoid = methodReturnType();
+        SymbolTableEntry currFunc = m_current.getSymTabEntry();
         match(TokenCode.IDENTIFIER);
         m_genCode.generate(TacCode.LABEL, null, null, m_prev.getSymTabEntry());
         match(TokenCode.LPAREN);
@@ -244,17 +248,27 @@ public class Parser {
         variableDeclarations();
         statementList();
         match(TokenCode.RBRACE);
+        if (!isVoid)
+        {
+            m_genCode.generate(TacCode.ASSIGN, funcReturnParam, null, currFunc);
+        }
+        funcReturnParam = null;
         m_genCode.generate(TacCode.RETURN, null, null, null);
         m_errorHandler.stopNonT();
     }
 
-    protected void methodReturnType() {
+    protected boolean methodReturnType() {
+        boolean isVoid = false;
         m_errorHandler.startNonT(NonT.METHOD_RETURN_TYPE);
-        if (lookaheadIs(TokenCode.VOID))
+        if (lookaheadIs(TokenCode.VOID)) {
             match(TokenCode.VOID);
-        else
+            isVoid = true;
+        }
+        else{
             type();
+        }
         m_errorHandler.stopNonT();
+        return isVoid;
     }
 
     protected void parameters() {
@@ -387,7 +401,7 @@ public class Parser {
         else if (lookaheadIs(TokenCode.RETURN)) {
             trace("return");
             match(TokenCode.RETURN);
-            optionalExpression();
+            funcReturnParam = optionalExpression();
             match(TokenCode.SEMICOLON);
         }
         else if (lookaheadIs(TokenCode.BREAK)) {
@@ -414,12 +428,14 @@ public class Parser {
             m_errorHandler.stopNonT();
     }
 
-    protected void optionalExpression() {
+    protected SymbolTableEntry optionalExpression() {
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.OPTIONAL_EXPRESSION);
         if (lookaheadIsFirstOfExpression()) {
-            expression();
+            ret = expression();
         }
         m_errorHandler.stopNonT();
+        return ret;
     }
 
     protected void statementBlock() {
@@ -638,12 +654,17 @@ public class Parser {
     }
 
     protected SymbolTableEntry idStartingFactor() {
-        SymbolTableEntry t = null;
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.ID_STARTING_FACTOR);
+        ret = m_current.getSymTabEntry();
         match(TokenCode.IDENTIFIER);
-        t = restOfIdStartingFactor();
+        SymbolTableEntry t = restOfIdStartingFactor();
+        if (t != null)
+        {
+            ret = t;
+        }
         m_errorHandler.stopNonT();
-        return t;
+        return ret;
     }
 //skoda betur
     protected SymbolTableEntry restOfIdStartingFactor() {
