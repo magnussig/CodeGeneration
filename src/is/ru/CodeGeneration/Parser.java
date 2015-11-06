@@ -447,7 +447,7 @@ public class Parser {
         SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.EXPRESSION);
         SymbolTableEntry simpleExpression_ste = simpleExpression();
-        ret = expression2(simpleExpression_ste);
+        ret = expression2();
         m_errorHandler.stopNonT();
         return ret;
     }
@@ -505,19 +505,18 @@ public class Parser {
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION);
         if (lookaheadIn(NonT.firstOf(NonT.SIGN))) {
             sign();
-
-            TacCode tc;
             if(m_prev.getOpType() == OpType.MINUS)
             {
                 SymbolTableEntry termSTE = term();
-
                 SymbolTableEntry t = newTemp();
                 m_genCode.generate(TacCode.UMINUS, termSTE, null, t);
-                ret = termSTE;
             }
         }
-        // Her er eitthvad skrytid.. paela betur
-        SymbolTableEntry termSTE = term();
+        else
+        {
+            SymbolTableEntry termSTE = term();
+        }
+
         ret = simpleExpression2();
         m_errorHandler.stopNonT();
         return ret;
@@ -558,7 +557,7 @@ public class Parser {
         SymbolTableEntry ret= null;
         m_errorHandler.startNonT(NonT.TERM);
         SymbolTableEntry ste = factor();
-        ret = term2(ste);
+        ret = term2();
         m_errorHandler.stopNonT();
         return ret;
     }
