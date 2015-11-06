@@ -443,12 +443,12 @@ public class Parser {
     }
 
     protected SymbolTableEntry expression() {
-        SymbolTableEntry simpleExpression_ste = null;
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.EXPRESSION);
-        simpleExpression_ste = simpleExpression();
-        expression2(simpleExpression_ste);
+        SymbolTableEntry simpleExpression_ste = simpleExpression();
+        ret = expression2(simpleExpression_ste);
         m_errorHandler.stopNonT();
-        return t;
+        return ret;
     }
 
     protected SymbolTableEntry expression2(SymbolTableEntry simpleExpression_ste) {
@@ -522,15 +522,15 @@ public class Parser {
         return ret;
     }
 
-    protected void simpleExpression2(SymbolTableEntry termSTE) {
+    protected SymbolTableEntry simpleExpression2(SymbolTableEntry termSTE) {
         SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION2);
         if (lookaheadIs(TokenCode.ADDOP)) {
             match(TokenCode.ADDOP);
 
-            term();
+            SymbolTableEntry termSTE2 = term();
             // Was missing!
-            simpleExpression2();
+            ret = simpleExpression2(termSTE2);
         }
         m_errorHandler.stopNonT();
         return ret;
@@ -571,7 +571,7 @@ public class Parser {
         if (lookaheadIs(TokenCode.LPAREN)) {
 
             match(TokenCode.LPAREN);
-            t = expressionList();
+            expressionList();
 
             match(TokenCode.RPAREN);
         }

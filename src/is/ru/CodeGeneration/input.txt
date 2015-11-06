@@ -1,16 +1,18 @@
 class Program {
-int i;
-int j;
-static int proc(int a, int b) {
-int x;
+    int i;
+    int j;
 
-x = a - b;
-return x;
-}
-static void main() {
-i = proc(1+2*3, -2 * 5);
-if(i < 1){
-writeln(i);
-}
-}
+    static int proc(int a, int b) {
+        int x;
+
+        x = a - b;
+        return x;
+    }
+
+    static void main() {
+        i = proc(1+2*3, -2 * 5);
+        if(i < 1){
+            writeln(i);
+        }
+    }
 }
