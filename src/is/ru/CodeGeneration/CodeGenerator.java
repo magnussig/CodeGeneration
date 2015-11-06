@@ -22,8 +22,28 @@ public class CodeGenerator {
     protected static void print(){
         for(Quadruple q:QuadrupleList.QList){
 
-               System.out.println(" \t \t " +  q.Op + " \t \t " + q.Param1 + " \t \t " + q.Param2 + " \t \t " + q.Result.getLexeme());
+            String p1;
+            String p2;
 
+            if (q.Param1 == null)
+            {
+                p1 = "null";
+            }
+            else
+            {
+                p1 = q.Param1.getLexeme();
+            }
+
+            if (q.Param2 == null)
+            {
+                p2 = "null";
+            }
+            else
+            {
+                p2 = q.Param2.getLexeme();
+            }
+
+            System.out.println(" \t \t " +  q.Op + " \t \t " + p1 + " \t \t " + p2 + " \t \t " + q.Result.getLexeme());
         }
 
         System.out.println("NEXT");
