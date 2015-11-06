@@ -452,25 +452,78 @@ public class Parser {
     }
 
     protected SymbolTableEntry expression2(SymbolTableEntry simpleExpression_ste) {
+        SymbolTableEntry ret= null;
         m_errorHandler.startNonT(NonT.EXPRESSION2);
-        /* check value of simpleExpression_ste, could be '+', '-' or '!'( */
+        /* create 1 tmp og 2 labels and then check which relop it is*/
         if (lookaheadIs(TokenCode.RELOP)) {
+            SymbolTableEntry t1 = newTemp();
+            m_genCode.generate(TacCode.VAR, null, null, t1);
+            SymbolTableEntry l1 = newLabel();
+            SymbolTableEntry l2 = newLabel();
+            TacCode tc;
+            OpType currOp = lookahead().getOpType();
+            if(currOp == OpType.EQUAL)
+            {
+                tc = TacCode.EQ;
+            }
+            else if(currOp == OpType.NOT_EQUAL)
+            {
+                tc = TacCode.NE;
+            }
+            else if(currOp == OpType.LT)
+            {
+                tc = TacCode.LT;
+            }
+            else if(currOp == OpType.GT)
+            {
+                tc = TacCode.GT;
+            }
+            else if(currOp == OpType.LTE)
+            {
+                tc = TacCode.LE;
+
+            }
+            else //if(currOp == OpType.GTE)
+            {
+                tc = TacCode.GE;
+            }
+            SymbolTableEntry prevSTE = m_prev.getSymTabEntry();
             match(TokenCode.RELOP);
-            simpleExpression();
+            //generate with tc and currSTE
+            m_genCode.generate(tc, prevSTE, m_current.getSymTabEntry(), l1);
+            m_genCode.generate(TacCode.ASSIGN, SymbolTable.lookup("0"), null, t1);
+            m_genCode.generate(TacCode.GOTO, null, null, l2);
+            ret= simpleExpression();
         }
         m_errorHandler.stopNonT();
+        return ret;
     }
-
-    protected void simpleExpression() {
+//check sign, let simpleExpression receive symboltableentry as a parameter
+    protected SymbolTableEntry simpleExpression() {
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION);
-        if (lookaheadIn(NonT.firstOf(NonT.SIGN)))
+        if (lookaheadIn(NonT.firstOf(NonT.SIGN))) {
             sign();
-        term();
-        simpleExpression2();
+            SymbolTableEntry t = newTemp();
+            m_genCode.generate(TacCode.VAR, null, null, t);
+            if(m_prev.getOpType() == OpType.MINUS) {
+               m_genCode.generate(TacCode.UMINUS, m_current.getSymTabEntry(), null, t);
+            }
+            else if(m_prev.getOpType() == OpType.PLUS) {
+                m_genCode.generate(TacCode.ADD, m_current.getSymTabEntry(), null, t);
+            }
+            else if(m_prev.getOpType() == OpType.OR) {
+                m_genCode.generate(TacCode.OR, m_current.getSymTabEntry(), null, t);
+            }
+        }
+        SymbolTableEntry termSTE = term();
+        ret = simpleExpression2(termSTE);
         m_errorHandler.stopNonT();
+        return ret;
     }
 
-    protected void simpleExpression2() {
+    protected void simpleExpression2(SymbolTableEntry termSTE) {
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION2);
         if (lookaheadIs(TokenCode.ADDOP)) {
             match(TokenCode.ADDOP);
@@ -480,13 +533,16 @@ public class Parser {
             simpleExpression2();
         }
         m_errorHandler.stopNonT();
+        return ret;
     }
 
-    protected void term() {
+    protected SymbolTableEntry term() {
+        SymbolTableEntry ret= null;
         m_errorHandler.startNonT(NonT.TERM);
         factor();
         term2();
         m_errorHandler.stopNonT();
+        return ret;
     }
 
     protected void term2() {
@@ -508,7 +564,7 @@ public class Parser {
         m_errorHandler.stopNonT();
         return t;
     }
-
+//skoda betur
     protected SymbolTableEntry restOfIdStartingFactor() {
         SymbolTableEntry t = null;
         m_errorHandler.startNonT(NonT.REST_OF_ID_STARTING_FACTOR);
