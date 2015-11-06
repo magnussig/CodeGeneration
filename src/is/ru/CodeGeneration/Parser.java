@@ -5,6 +5,7 @@ import is.ru.CodeGeneration.Enums.TacCode;
 import is.ru.CodeGeneration.Enums.TokenCode;
 import is.ru.CodeGeneration.Enums.NonT;
 import is.ru.CodeGeneration.Enums.OpType;
+import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -451,7 +452,7 @@ public class Parser {
         return ret;
     }
 
-    protected SymbolTableEntry expression2(SymbolTableEntry simpleExpression_ste) {
+    protected SymbolTableEntry expression2() {
         SymbolTableEntry ret= null;
         m_errorHandler.startNonT(NonT.EXPRESSION2);
         /* create 1 tmp og 2 labels and then check which relop it is*/
@@ -489,11 +490,11 @@ public class Parser {
             }
             SymbolTableEntry prevSTE = m_prev.getSymTabEntry();
             match(TokenCode.RELOP);
+            ret= simpleExpression();
             //generate with tc and currSTE
-            m_genCode.generate(tc, prevSTE, m_current.getSymTabEntry(), l1);
+            m_genCode.generate(tc, prevSTE, ret, l1);
             m_genCode.generate(TacCode.ASSIGN, SymbolTable.lookup("0"), null, t1);
             m_genCode.generate(TacCode.GOTO, null, null, l2);
-            ret= simpleExpression();
         }
         m_errorHandler.stopNonT();
         return ret;
@@ -504,33 +505,50 @@ public class Parser {
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION);
         if (lookaheadIn(NonT.firstOf(NonT.SIGN))) {
             sign();
-            SymbolTableEntry t = newTemp();
-            m_genCode.generate(TacCode.VAR, null, null, t);
-            if(m_prev.getOpType() == OpType.MINUS) {
-               m_genCode.generate(TacCode.UMINUS, m_current.getSymTabEntry(), null, t);
-            }
-            else if(m_prev.getOpType() == OpType.PLUS) {
-                m_genCode.generate(TacCode.ADD, m_current.getSymTabEntry(), null, t);
-            }
-            else if(m_prev.getOpType() == OpType.OR) {
-                m_genCode.generate(TacCode.OR, m_current.getSymTabEntry(), null, t);
+
+            TacCode tc;
+            if(m_prev.getOpType() == OpType.MINUS)
+            {
+                SymbolTableEntry termSTE = term();
+
+                SymbolTableEntry t = newTemp();
+                m_genCode.generate(TacCode.UMINUS, termSTE, null, t);
+                ret = termSTE;
             }
         }
+        // Her er eitthvad skrytid.. paela betur
         SymbolTableEntry termSTE = term();
-        ret = simpleExpression2(termSTE);
+        ret = simpleExpression2();
         m_errorHandler.stopNonT();
         return ret;
     }
 
-    protected SymbolTableEntry simpleExpression2(SymbolTableEntry termSTE) {
+    protected SymbolTableEntry simpleExpression2() {
         SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.SIMPLE_EXPRESSION2);
         if (lookaheadIs(TokenCode.ADDOP)) {
-            match(TokenCode.ADDOP);
 
+            SymbolTableEntry t = newTemp();
+            m_genCode.generate(TacCode.VAR, null, null, t);
+
+            TacCode tc;
+            if(m_prev.getOpType() == OpType.MINUS) {
+                tc = TacCode.SUB;
+            }
+            else if(m_prev.getOpType() == OpType.PLUS) {
+                tc = TacCode.ADD;
+            }
+            else {//if(m_prev.getOpType() == OpType.OR) {
+                tc = TacCode.OR;
+            }
+
+            SymbolTableEntry prev = m_prev.getSymTabEntry();
+            match(TokenCode.ADDOP);
             SymbolTableEntry termSTE2 = term();
-            // Was missing!
-            ret = simpleExpression2(termSTE2);
+
+            m_genCode.generate(tc, prev, termSTE2, t);
+
+            ret = simpleExpression2();
         }
         m_errorHandler.stopNonT();
         return ret;
@@ -539,21 +557,49 @@ public class Parser {
     protected SymbolTableEntry term() {
         SymbolTableEntry ret= null;
         m_errorHandler.startNonT(NonT.TERM);
-        factor();
-        term2();
+        SymbolTableEntry ste = factor();
+        ret = term2(ste);
         m_errorHandler.stopNonT();
         return ret;
     }
 
-    protected void term2() {
+    protected SymbolTableEntry term2() {
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.TERM2);
         if (lookaheadIs(TokenCode.MULOP)) {
+
+            SymbolTableEntry t1 = newTemp();
+            m_genCode.generate(TacCode.VAR, null, null, t1);
+
+            TacCode tc;
+            OpType oc = lookahead().getOpType();
+            if (oc == OpType.MULT)
+            {
+                tc = TacCode.MULT;
+            }
+            else if (oc == OpType.DIV)
+            {
+                tc = TacCode.DIVIDE;
+            }
+            else if (oc == OpType.MOD)
+            {
+                tc = TacCode.MOD;
+            }
+            else// if (oc == OpType.AND)
+            {
+                tc = TacCode.AND;
+            }
+
+            SymbolTableEntry prevSTE = m_prev.getSymTabEntry();
             match(TokenCode.MULOP);
-            factor();
+            SymbolTableEntry ste = factor();
+
+            m_genCode.generate(tc, prevSTE, ste, t1);
             // Was missing!
-            term2();
+            ret = term2();
         }
         m_errorHandler.stopNonT();
+        return ret;
     }
 
     protected SymbolTableEntry idStartingFactor() {
@@ -585,26 +631,26 @@ public class Parser {
     }
 
     protected SymbolTableEntry factor() {
-        SymbolTableEntry t = null;
+        SymbolTableEntry ret = null;
         m_errorHandler.startNonT(NonT.FACTOR);
         if (lookaheadIs(TokenCode.IDENTIFIER))
-            t = idStartingFactor();
+            ret = idStartingFactor();
         else if (lookaheadIs(TokenCode.NUMBER)) {
             match(TokenCode.NUMBER);
         }
         else if (lookaheadIs(TokenCode.LPAREN)) {
             match(TokenCode.LPAREN);
-            t = expression();
+            ret = expression();
             match(TokenCode.RPAREN);
         }
         else if (lookaheadIs(TokenCode.NOT)) {
             match(TokenCode.NOT);
-            t = factor();
+            ret = factor();
         }
         else // TODO: Add error context, i.e. factor
             noMatch();
         m_errorHandler.stopNonT();
-        return t;
+        return ret;
     }
 
     protected void variableLoc() {
